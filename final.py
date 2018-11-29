@@ -70,18 +70,17 @@ class Alumni:
             # append the average score to the dataset
             person.append(satisfaction / 5)
             self.satisfaction.append(satisfaction / 5)
-            
-
-
-            
+          
     
+    # encode string to integer
     def encode(self, index, enc_dict, default_val):
         ans = []
         for person in self.alumni:
             if person[index] in enc_dict:
-                ans.append(enc_dict[person[index]])
+                person[index] = end_dict[person[index]]
             else:
-                ans.append(default_val)
+                person[index] = default_val
+            ans.append(person[index])
         return ans
     
     
