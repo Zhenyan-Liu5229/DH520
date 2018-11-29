@@ -12,8 +12,6 @@ class Alumni:
     SURVEY_FILE = 'survey.csv'
 
     def __init__(self):
-        self.age = []  # a list of encoded age range
-        self.gender = [] # a list of encoded gender category
         self.degree = [] # a list of encoded degree category
         self.entry = []  # a list of encoded entry job category
         self.company = [] # a list of encoded match company scale
@@ -29,8 +27,14 @@ class Alumni:
     def initializing(self):
         self.load_csv_file()
         self.calculate_satisfaction()
-        self.age_clean()
-        self.gender_clean()
+        
+        age_dict = {"17 – 21 years": 1, "22 – 30 years":2, "31 – 40 years":3}
+        gender_dict = {'Prefer not to say':0, 'I am a man.':1, 'I am a woman.':2,
+                       'I am non-binary / genderqueer / third gender.':0}
+        
+        self.age = self.encode(0, age_dict, 4)
+        self.gender = self.encode(1, gender_dict, 0)
+        
         self.degree_clean()
         self.entry_clean()
         self.salary_clean()
@@ -66,36 +70,21 @@ class Alumni:
             # append the average score to the dataset
             person.append(satisfaction / 5)
             self.satisfaction.append(satisfaction / 5)
+            
 
 
-    # data encoding for categorical data -age
-    def age_clean(self):
+            
+    
+    def encode(self, index, enc_dict, default_val):
+        ans = []
         for person in self.alumni:
-            if person[0] == '17 – 21 years':
-                person[0] = 1
-            elif person[0] == '22 – 30 years':
-                person[0] = 2
-            elif person [0] == '31 – 40 years':
-                person[0] = 3
+            if person[index] in enc_dict:
+                ans.append(enc_dict[person[index]])
             else:
-                person[0] = 4
-            self.age.append(person[0])
-
-
-    # data encoding for categorical data - gender
-    def gender_clean(self):
-        for person in self.alumni:
-            if person[1] == 'Prefer not to say':
-                person[1] = 0
-            elif person[1] == 'I am a man.':
-                person[1] = 1
-            elif person[1] == 'I am a woman.':
-                person[1] = 2
-            elif person[1] == 'I am non-binary / genderqueer / third gender.': 
-                person[1] = 0
-            self.gender.append(person[1])
-
-
+                ans.append(default_val)
+        return ans
+    
+    
     # data encoding for categorical data -degree
     def degree_clean(self):
         for person in self.alumni:
