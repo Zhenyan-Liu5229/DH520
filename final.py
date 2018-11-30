@@ -2,47 +2,51 @@ from scipy.stats import pearsonr, spearmanr
 import matplotlib.pyplot as plt
 import numpy as np
 
-# the encoding score for job satisfaction
+# dictionaries to encode data
 SCORE = {'Strongly Agree':2, 'Agree': 1, 'Undecided': 0,
           'Disagree':-1, 'Strongly Disagree': -2 }
 
+age_dict = {'17 – 21 years': 1, '22 – 30 years': 2, '31 – 40 years': 3, '41 – 50 years': 4}
+
+gender_dict = {'Prefer not to say':0, 'I am a man.': 1, 'I am a woman.' :2,
+              'I am non-binary / genderqueer / third gender.': 0}
+
+entry_dict = {'Yes': 0, 'No': 1}
+
+salary_dict = {'Under 20000': 1, '20000 to 40000':2, '40001 to 60000': 3,
+              '60001 to 80000': 4, '80001 to 100000': 5, '100001 to 120000': 6,
+              'Over 120000': 7}
+
+
 class Alumni:
-    
     # the dataset used in the study
     SURVEY_FILE = 'survey.csv'
 
-    def __init__(self):
-        self.age = []  # a list of encoded age range
-        self.gender = [] # a list of encoded gender category
+    def __init__(self):          
         self.degree = [] # a list of encoded degree category
-        self.entry = []  # a list of encoded entry job category
-        self.company = [] # a list of encoded match company scale
-        self.position = [] # a list of encoded match job position
         self.satisfaction = [] # a list of calculated job satisfaction score
-        self.salary = []   # a list of encoded salary range
         self.alumni = []  # the list of all the information from participants
-        self.analysis = []
+        self.analysis = [] # the list of all the satisfaction score for each variable category
 
 
-
-########## Initialization ################
-    def initializing(self):
+########## Processing List ################
+    def processing(self):       
         self.load_csv_file()
         self.calculate_satisfaction()
-        self.age_clean()
-        self.gender_clean()
+        self.age = self.encode(0, age_dict) # a list of encoded age category
+        self.gender = self.encode(1, gender_dict) # a list of encoded gender category
         self.degree_clean()
-        self.entry_clean()
-        self.salary_clean()
-        self.company_match()
-        self.position_match()
-        self.age_satisfaction()
-        self.gender_satisfaction()
-        self.degree_satisfaction()
-        self.entry_satisfaction()
-        self.salary_satisfaction()
-        self.company_match_satisfaction()
-        self.position_match_satisfaction()
+        self.entry = self.encode(3, entry_dict)  # a list of encoded entry job category
+        self.salary = self.encode(-4, salary_dict)   # a list of encoded salary range
+        self.company = self.match(4) # a list of encoded match company scale
+        self.position = self.match(5) # a list of encoded match job position
+        self.variable_satisfaction(0, self.age)
+        self.variable_satisfaction(1, self.gender)
+        self.variable_satisfaction(2, self.degree)
+        self.variable_satisfaction(3, self.entry)
+        self.variable_satisfaction(-4, self.salary)
+        self.variable_satisfaction(4, self.company)
+        self.variable_satisfaction(5, self.position)
 
 
 
@@ -68,265 +72,75 @@ class Alumni:
             self.satisfaction.append(satisfaction / 5)
 
 
-    # data encoding for categorical data -age
-    def age_clean(self):
+    # the method to encode age, gender, job level and salary
+    def encode(self, index, enc_dict, default_val = 0):
+        encoded = []
         for person in self.alumni:
-            if person[0] == '17 – 21 years':
-                person[0] = 1
-            elif person[0] == '22 – 30 years':
-                person[0] = 2
-            elif person [0] == '31 – 40 years':
-                person[0] = 3
+            if person[index] in enc_dict:
+                person[index] = enc_dict[person[index]]
             else:
-                person[0] = 4
-            self.age.append(person[0])
+                person[index] = default_val
+            encoded.append(person[index])
 
+        return encoded
 
-    # data encoding for categorical data - gender
-    def gender_clean(self):
-        for person in self.alumni:
-            if person[1] == 'Prefer not to say':
-                person[1] = 0
-            elif person[1] == 'I am a man.':
-                person[1] = 1
-            elif person[1] == 'I am a woman.':
-                person[1] = 2
-            elif person[1] == 'I am non-binary / genderqueer / third gender.': 
-                person[1] = 0
-            self.gender.append(person[1])
-
-
+    
     # data encoding for categorical data -degree
     def degree_clean(self):
         for person in self.alumni:
-            if person[2][0].lower() == 'a': # Associate's
+            if person[2][0] == 'A': # Associate's
                 person[2] = 1
-            elif person[2][0].lower() == 'b': # Bachelor's
+            elif person[2][0] == 'B': # Bachelor's
                 person[2] = 2
-            elif person[2][0].lower() == 'm': # Master's
+            elif person[2][0] == 'M': # Master's
                 person[2] = 3
-            elif person[2][0].lower() == 'p': # PhD
+            elif person[2][0] == 'P': # PhD
                 person[2] = 4
-            elif person[2][0].lower() == 'd': # Diploma
+            elif person[2][0] == 'D': # Diploma
                 person[2] = 0
             self.degree.append(person[2])
 
 
-    # data encoding for categorical data -entry job 
-    def entry_clean(self):
+    # the method to encode the match of company scale and position
+    def match(self, index):
+        encoded = []
         for person in self.alumni:
-            if person[3] == 'Yes':
-                person[3] = 0
-            elif person[3] == 'No':
-                person[3] = 1
-            self.entry.append(person[3])
-    
-
-    # data encoding for categorical data -salary range
-    def salary_clean(self):
-        for person in self.alumni:
-            if person[-4] == 'Under 20000':
-                person[-4] = 1
-            elif person[-4] == '20000 to 40000':
-                person[-4] = 2
-            elif person[-4] == '40001 to 60000': 
-                person[-4] = 3
-            elif person[-4] == '60001 to 80000': 
-                person[-4] = 4
-            elif person[-4] == '80001 to 100000':
-                person[-4] = 5
-            elif person[-4] == '100001 to 120000':
-                person[-4] = 6
-            elif person[-4] == 'Over 120000':
-                person[-4] = 7
-            else:  # for people did not answer or answer 'prefer not to say'
-                person[-4] = 0
-            self.salary.append(person[-4])
-    
-
-    # data encoding for categorical data -match of company scale/position
-    def company_match(self):
-        for person in self.alumni:
-            if person[4] == 'other':
-                person[4] = 0
+            if person[index] == 'other':
+                person[index] = 0
             else:
-                if person[4] == person[12]:
-                    person[4] = 2
+                if person[index] == person[index + 8]:
+                    person[index] = 2
                 else:
-                    person[4] = 1
-            self.company.append(person[4])
-    
-
-    def position_match(self):
-        for person in self.alumni:
-            if person[5] == 'other':
-                person[5] = 0
-            else:
-                if person[5] == person[13]:
-                    person[5] = 2
-                else:
-                    person[5] = 1
-            self.position.append(person[5])
+                    person[index] = 1
+            encoded.append(person[index])
+        return encoded
 
 
 
 ########### Calculate average score for each encoded category ########
-    # age - satisfaction
-    def age_satisfaction(self):
+    def variable_satisfaction(self, index, variable):
         total_score = {}
         for person in self.alumni:
-            if person[0] in total_score:
-                total_score[person[0]] += person[-1]
+            if person[index] in total_score:
+                total_score[person[index]] += person[-1]
             else:
-                total_score[person[0]] = person[-1]
+                total_score[person[index]] = person[-1]
 
         number_of_people = {}
-        for age in self.age:
-            if age in number_of_people:
-                number_of_people[age] += 1
+        for category in variable:
+            if category in number_of_people:
+                number_of_people[category] += 1
             else:
-                number_of_people[age] = 1
+                number_of_people[category] = 1
         
-        age_satisfaction = {}
+        variable_satisfaction = {}
         for key in total_score:
-            age_satisfaction[key] = format(float(total_score[key])/float(number_of_people[key]),'.2f')
-        self.analysis.append(age_satisfaction)
-
-
-    # gender - satisfaction
-    def gender_satisfaction(self):
-        total_score = {}
-        for person in self.alumni:
-            if person[1] in total_score:
-                total_score[person[1]] += person[-1]
-            else:
-                total_score[person[1]] = person[-1]
-
-        number_of_people = {}
-        for gender in self.gender:
-            if gender in number_of_people:
-                number_of_people[gender] += 1
-            else:
-                number_of_people[gender] = 1
-        
-        gender_satisfaction = {}
-        for key in total_score:
-            gender_satisfaction[key] = format(float(total_score[key])/float(number_of_people[key]),'.2f')
-        self.analysis.append(gender_satisfaction)
-
-
-    # degree - satisfaction
-    def degree_satisfaction(self):
-        total_score = {}
-        for person in self.alumni:
-            if person[2] in total_score:
-                total_score[person[2]] += person[-1]
-            else:
-                total_score[person[2]] = person[-1]
-
-        number_of_people = {}
-        for degree in self.degree:
-            if degree in number_of_people:
-                number_of_people[degree] += 1
-            else:
-                number_of_people[degree] = 1
-        
-        degree_satisfaction = {}
-        for key in total_score:
-            degree_satisfaction[key] = format(float(total_score[key])/float(number_of_people[key]),'.2f')
-        self.analysis.append(degree_satisfaction)
-
-
-    # job level - satisfaction
-    def entry_satisfaction(self):
-        total_score = {}
-        for person in self.alumni:
-            if person[3] in total_score:
-                total_score[person[3]] += person[-1]
-            else:
-                total_score[person[3]] = person[-1]
-
-        number_of_people = {}
-        for entry in self.entry:
-            if entry in number_of_people:
-                number_of_people[entry] += 1
-            else:
-                number_of_people[entry] = 1
-        
-        entry_satisfaction = {}
-        for key in total_score:
-            entry_satisfaction[key] = format(float(total_score[key])/float(number_of_people[key]),'.2f')
-        self.analysis.append(entry_satisfaction)
-
-
-    # salary - satisfaction
-    def salary_satisfaction(self):
-        total_score = {}
-        for person in self.alumni:
-            if person[-4] in total_score:
-                total_score[person[-4]] += person[-1]
-            else:
-                total_score[person[-4]] = person[-1]
-
-        number_of_people = {}
-        for salary in self.salary:
-            if salary in number_of_people:
-                number_of_people[salary] += 1
-            else:
-                number_of_people[salary] = 1
-        
-        salary_satisfaction = {}
-        for key in total_score:
-            salary_satisfaction[key] = format(float(total_score[key])/float(number_of_people[key]),'.2f')
-        self.analysis.append(salary_satisfaction)
-
-
-    # match of company_scale - satisfaction
-    def company_match_satisfaction(self):
-        total_score = {}
-        for person in self.alumni:
-            if person[4] in total_score:
-                total_score[person[4]] += person[-1]
-            else:
-                total_score[person[4]] = person[-1]
-
-        number_of_people = {}
-        for match in self.company:
-            if match in number_of_people:
-                number_of_people[match] += 1
-            else:
-                number_of_people[match] = 1
-        
-        company_match_satisfaction = {}
-        for key in total_score:
-            company_match_satisfaction[key] = format(float(total_score[key])/float(number_of_people[key]),'.2f')
-        self.analysis.append(company_match_satisfaction)
-        
-    
-    # match of job position - satisfaction
-    def position_match_satisfaction(self):
-        total_score = {}
-        for person in self.alumni:
-            if person[5] in total_score:
-                total_score[person[5]] += person[-1]
-            else:
-                total_score[person[5]] = person[-1]
-
-        number_of_people = {}
-        for match in self.position:
-            if match in number_of_people:
-                number_of_people[match] += 1
-            else:
-                number_of_people[match] = 1
-        
-        position_match_satisfaction = {}
-        for key in total_score:
-            position_match_satisfaction[key] = format(float(total_score[key])/float(number_of_people[key]),'.2f')
-        self.analysis.append(position_match_satisfaction)
+            variable_satisfaction[key] = format(float(total_score[key])/float(number_of_people[key]),'.2f')
+        self.analysis.append(variable_satisfaction)
 
 
 a = Alumni()
-a.initializing() 
+a.processing() 
 
 
 ########### Calculate Pearson/Spear-man Correlation ########
