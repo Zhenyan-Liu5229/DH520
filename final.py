@@ -147,7 +147,7 @@ class Alumni:
     # data encoding for categorical data -match of company scale/position
     def company_match(self):
         for person in self.alumni:
-            if person[4] == 'Other':
+            if person[4] == 'other':
                 person[4] = 0
             else:
                 if person[4] == person[12]:
@@ -159,7 +159,7 @@ class Alumni:
 
     def position_match(self):
         for person in self.alumni:
-            if person[5] == 'Other':
+            if person[5] == 'other':
                 person[5] = 0
             else:
                 if person[5] == person[13]:
@@ -369,15 +369,17 @@ for n, relations in enumerate(a.analysis):
     elif n == 5:
         plt.title('Figure 6: Match of Company Scale and Satisfaction')
         plt.xlabel('Match of Company Scale')
-        plt.xticks([0, 1, 2], ['Other', 'Match', 'Mismatch'])
+        plt.xticks([0, 1, 2], ['Other', 'Mismatch', 'Match'])
 
     else:
         plt.title('Figure 7: Match of Position and Satisfaction')
         plt.xlabel('Match of Job Position')
-        plt.xticks([0, 1, 2], ['Other', 'Match', 'Mismatch'])
+        plt.xticks([0, 1, 2], ['Other', 'Mismatch', 'Match'])
 
 # ########### Visualization (Scatter plot & line of linear regression) ########
-    # age - satisfaction
+    for i, y in enumerate(score):
+        plt.annotate(y, (factors[i], score[i]))
+    
 
     plt.ylabel('Satisfaction Score')
     plt.ylim([0, 2.5])
@@ -387,6 +389,6 @@ for n, relations in enumerate(a.analysis):
     fit = np.polyfit(factors, score, 1)
     # fit_fn is now a function which takes in x and returns an estimate for y
     fit_fn = np.poly1d(fit) 
-    plt.plot(factors, score, 'bo', factors, fit_fn(factors), '--k')
+    plt.plot(factors, score, 'yo', factors, fit_fn(factors), '--k')
 
     plt.show()
